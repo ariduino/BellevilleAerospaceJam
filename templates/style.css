@@ -1,0 +1,21 @@
+table {
+    border-collapse: collapse;
+    margin-bottom: 25px;
+}
+table, td {
+    border: 3px solid black;
+    padding: 5px;
+    font-size: 20px;
+}
+.table-header {
+    text-align: center;
+    font-weight: bold;
+}
+p {
+    margin-bottom: 20px;
+    font-size: 25px;
+}
+h1 {
+    font-size: 50px;
+    font-weight: bold;
+}
