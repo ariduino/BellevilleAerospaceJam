@@ -71,7 +71,7 @@ def update_sensor_data():
     lastAccelList = accelList
     lastGyroList = gyroList
     
-    accelState, orientation = tracker.update(np.array(mpu.get_accel_data()), np.array(mpu.get_gyro_data()), dt)
+    accelState, orientation = tracker.update(np.array(accelList), np.array(gyroList), dt)
     
     position = accelState[0]
     velocity = accelState[1]
