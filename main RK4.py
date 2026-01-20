@@ -38,6 +38,18 @@ def index():
 
 # This function runs in the background to transmit data to connected clients.
 def update_html():
+    orientationList = orientation.tolist()
+    for i in range (0,3):
+        orientationList[i] = round(orientationList[i], 3)
+        
+    velocityList = velocity.tolist()
+    for i in range (0,3):
+        velocityList[i] = round(velocityList[i], 3)
+        
+    positionList = position.tolist()
+    for i in range (0,3):
+        positionList[i] = round(positionList[i], 3)
+        
     socketio.emit(  # Then, we emit an event called "update_data" - but this can actually be whatever we want - with the data being a dictionary
         'update_data',
         {
@@ -46,13 +58,13 @@ def update_html():
             'altitude': altitude,
             'rawAcceleration': lastAccelList,
             'linearAcceleration': [0, 0, 0],
-            'velocity': velocity,
-            'position': position,
+            'velocity': velocityList,
+            'position': positionList,
             'rawGyroscope': lastGyroList,
-            'orientation': orientation
+            'orientation': orientationList
         }
     )
-
+    
 def update_sensor_data():
     global pressure, altitude, temperature
     global position, velocity, orientation
@@ -72,7 +84,6 @@ def update_sensor_data():
     lastGyroList = gyroList
     
     accelState, orientation = tracker.update(np.array(accelList), np.array(gyroList), dt)
-    
     position = accelState[0]
     velocity = accelState[1]
     last_data_update_time = time.monotonic()
