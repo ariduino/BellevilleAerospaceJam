@@ -20,6 +20,8 @@ tracker = Combined_RK4(initial_angles=[0, 0, 0], alpha=0.98, damping=1.0)
 # SENSOR VALUE VARIABLES (we define them at the top so that they are global)
 global pressure, altitude, temperature
 global position, velocity, orientation
+lastAccelList = []
+lastGyroList = []
 x, y, z = 0, 1, 2 # indexes for easier reading of accel, vel, pos, gyro, and orientation lists (now its accel[x] instead of accel[0])
 
 # UPDATE TIME VARIABLE
@@ -42,11 +44,11 @@ def update_html():
             'barometricPressure': pressure,
             'temperature': temperature,
             'altitude': altitude,
-            'rawAcceleration': mpu.get_accel_data(),
+            'rawAcceleration': lastAccelList,
             'linearAcceleration': [0, 0, 0],
             'velocity': velocity,
             'position': position,
-            'rawGyroscope': mpu.get_gyro_data(),
+            'rawGyroscope': lastGyroList,
             'orientation': orientation
         }
     )
@@ -61,11 +63,16 @@ def update_sensor_data():
     temperature = bmp.get_temperature() 
 
     dt = time.monotonic() - last_data_update_time
+    
     accelRaw = mpu.get_accel_data()
     accelList = [accelRaw['x'], accelRaw['y'], accelRaw['z']]
     gyroRaw = mpu.get_gyro_data()
     gyroList = [gyroRaw['x'], gyroRaw['y'], gyroRaw['z']]
-    accelState, orientation = tracker.update(np.array(accelList), np.array(gyroList), dt)
+    lastAccelList = accelList
+    lastGyroList = gyroList
+    
+    accelState, orientation = tracker.update(np.array(mpu.get_accel_data()), np.array(mpu.get_gyro_data()), dt)
+    
     position = accelState[0]
     velocity = accelState[1]
     last_data_update_time = time.monotonic()
