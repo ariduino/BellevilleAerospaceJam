@@ -128,17 +128,17 @@ def calibrateAccel():
 def correctedAccel():
     raw = mpu.get_accel_data()
     return [
-        raw['x'] - accelBias[x],
-        raw['y'] - accelBias[y],
-        raw['z'] - accelBias[z]
+        round(raw['x'] - accelBias[x], 3),
+        round(raw['y'] - accelBias[y], 3),
+        round(raw['z'] - accelBias[z], 3)
     ]
 
 def correctedGyro():
     raw = mpu.get_gyro_data()
     return [
-        raw['x'],
-        raw['y'],
-        raw['z']
+        round(raw['x'], 3),
+        round(raw['y'], 3),
+        round(raw['z'], 3)
     ]
 
 # This function runs when someone connects to the server - and all we do is start the background thread to update the data.

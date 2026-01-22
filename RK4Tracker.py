@@ -107,9 +107,9 @@ class Combined_RK4:
         
         return np.vstack((vel_slope, accel_slope))
     
-    def update(self, gyro_now, accel_now, dt):
-        gyro_now = np.array(gyro_now)
+    def update(self, accel_now, gyro_now, dt):
         accel_now = np.array(accel_now)
+        gyro_now = np.array(gyro_now)
         
         # 1. Update Orientation (Gyro + Complementary Filter)
         gyro_mid = (self.gyro_prev + gyro_now) / 2.0
