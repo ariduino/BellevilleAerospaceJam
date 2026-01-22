@@ -14,12 +14,17 @@ from RK4Tracker import Combined_RK4
 # LIBRARY OBJECT DEFINITIONS
 bmp = BMP180()
 mpu = mpu6050(0x68) # 0x68 is the address for the MPU6050 on the I2C bus.
+calibrationSamples = 500
+calibrationTime = 0.005
+global accelBias
+accelBias = [0.0, 0.0, 0.0]
 tracker = Combined_RK4(initial_angles=[0, 0, 0], alpha=0.98, damping=1.0)
 
 
 # SENSOR VALUE VARIABLES (we define them at the top so that they are global)
 global pressure, altitude, temperature
 global position, velocity, orientation
+global lastAccelList, lastGyroList
 lastAccelList = []
 lastGyroList = []
 x, y, z = 0, 1, 2 # indexes for easier reading of accel, vel, pos, gyro, and orientation lists (now its accel[x] instead of accel[0])
@@ -69,21 +74,18 @@ def update_sensor_data():
     global pressure, altitude, temperature
     global position, velocity, orientation
     global last_data_update_time
-    # Read barometer
+    global lastAccelList, lastGyroList
+
     pressure = bmp.get_pressure() 
     altitude = bmp.get_altitude() 
     temperature = bmp.get_temperature() 
 
-    dt = time.monotonic() - last_data_update_time
+    dt = time.monotonic() - last_data_update_time    
+    lastAccelList = correctedAccel()
+    lastGyroList = correctedGyro
+
+    accelState, orientation = tracker.update(np.array(lastAccelList), np.array(lastGyroList), dt)
     
-    accelRaw = mpu.get_accel_data()
-    accelList = [accelRaw['x'], accelRaw['y'], accelRaw['z']]
-    gyroRaw = mpu.get_gyro_data()
-    gyroList = [gyroRaw['x'], gyroRaw['y'], gyroRaw['z']]
-    lastAccelList = accelList
-    lastGyroList = gyroList
-    
-    accelState, orientation = tracker.update(np.array(accelList), np.array(gyroList), dt)
     position = accelState[0]
     velocity = accelState[1]
     last_data_update_time = time.monotonic()
@@ -103,6 +105,42 @@ def loop(): # MAIN LOOP FUNCTION
             last_html_update_time = currentTime
             update_html()
 
+
+def calibrate_accelerometer():
+    global accelBias
+    
+    sum_accel = [0.0, 0.0, 0.0]
+    
+    for i in range(calibrationSamples):
+        a = mpu.get_accel_data()
+        sum_accel[x] += a['x']
+        sum_accel[y] += a['y']
+        sum_accel[z] += a['z']
+        time.sleep(calibrationTime)
+
+    avg_accel = [s / calibrationSamples for s in sum_accel]
+
+    accelBias[x] = avg_accel[x] - 0.0
+    accelBias[y] = avg_accel[y] - 0.0
+    accelBias[z] = avg_accel[z] - 9.81
+
+    print("Accel bias:", accelBias)
+
+def correctedAccel():
+    raw = mpu.get_accel_data()
+    return [
+        raw['x'] - accelBias[x],
+        raw['y'] - accelBias[y],
+        raw['z'] - accelBias[z]
+    ]
+
+def correctedGyro():
+    raw = mpu.get_gyro_data()
+    return [
+        raw['x'],
+        raw['y'],
+        raw['z']
+    ]
 
 # This function runs when someone connects to the server - and all we do is start the background thread to update the data.
 @socketio.on('connect')

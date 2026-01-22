@@ -142,12 +142,12 @@
                 altitudeSpan.textContent = altitude;
 
                 for (var i = 0; i < 3; i++){ // loop through x, y, z
-                    rawAccelTable.rows[1].cells[i].querySelector("span").textContent = rawAcceleration[i].toFixed(2);
-                    linAccelTable.rows[1].cells[i].querySelector("span").textContent = linearAcceleration[i].toFixed(2);
-                    velTable.rows[1].cells[i].querySelector("span").textContent = velocity[i].toFixed(2);
-                    posTable.rows[1].cells[i].querySelector("span").textContent = position[i].toFixed(2);
-                    orientationTable.rows[1].cells[i].querySelector("span").textContent = orientation[i].toFixed(2);
-                    rawGyroTable.rows[1].cells[i].querySelector("span").textContent = rawGyroscope[i].toFixed(2);
+                    rawAccelTable.rows[1].cells[i].querySelector("span").textContent = rawAcceleration[i];
+                    linAccelTable.rows[1].cells[i].querySelector("span").textContent = linearAcceleration[i];
+                    velTable.rows[1].cells[i].querySelector("span").textContent = velocity[i];
+                    posTable.rows[1].cells[i].querySelector("span").textContent = position[i];
+                    orientationTable.rows[1].cells[i].querySelector("span").textContent = orientation[i];
+                    rawGyroTable.rows[1].cells[i].querySelector("span").textContent = rawGyroscope[i];
                 }
             });
         });
