@@ -153,8 +153,8 @@ class Combined_RK4:
         self.AccelState[1] *= self.damping
         
         # Cleanup
-        self.accel_prev = lin_accel_now
-        self.gyro_prev = gyro_now
+        self.accel_prev = lin_accel_now.copy()
+        self.gyro_prev = gyro_now.copy()
 
         return self.AccelState, self.GyroState
 
