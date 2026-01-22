@@ -80,7 +80,7 @@ def update_sensor_data():
 
     dt = time.monotonic() - last_data_update_time    
     lastAccelList = correctedAccel()
-    lastGyroList = correctedGyro
+    lastGyroList = correctedGyro()
 
     accelState, orientation = tracker.update(lastAccelList, lastGyroList, dt)
     
