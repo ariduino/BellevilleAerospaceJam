@@ -4,8 +4,6 @@ from flask_socketio import SocketIO
 
 # MAIN LIBRARY IMPORTS
 import time
-import math
-import numpy as np
 from bmp180 import BMP180
 from mpu6050 import mpu6050
 from RK4Tracker import Combined_RK4
@@ -84,7 +82,7 @@ def update_sensor_data():
     lastAccelList = correctedAccel()
     lastGyroList = correctedGyro
 
-    accelState, orientation = tracker.update(np.array(lastAccelList), np.array(lastGyroList), dt)
+    accelState, orientation = tracker.update(lastAccelList, lastGyroList, dt)
     
     position = accelState[0]
     velocity = accelState[1]
@@ -94,6 +92,7 @@ def update_sensor_data():
 
 
 def loop(): # MAIN LOOP FUNCTION
+    calibrateAccel()
     global last_html_update_time
     while True:
         currentTime = time.monotonic()
@@ -106,7 +105,7 @@ def loop(): # MAIN LOOP FUNCTION
             update_html()
 
 
-def calibrate_accelerometer():
+def calibrateAccel():
     global accelBias
     
     sum_accel = [0.0, 0.0, 0.0]
