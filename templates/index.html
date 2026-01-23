@@ -174,7 +174,7 @@
             });
             var clipPressure = document.getElementById("clipButton");
             clipPressure.addEventListener("click", function() {
-                socket.emit('clip_pressure', {});
+                socket.emit('clip_pressure');
             });
             socket.on('update_pressure', function(msg) {
                 var pressureClipSpan = document.getElementById("clippedPressure");
