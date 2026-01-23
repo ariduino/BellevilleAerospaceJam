@@ -55,7 +55,7 @@
     <p><b>Temperature: </b> <span id="temperature">Loading...</span></p>
     <p><b>Altitude: </b> <span id="altitude">Loading...</span></p>
 
-    <p><b>Clipped Pressure: </b> <span id="clippedPressure"></span></p>
+    <p><b>Clipped Pressure: </b> <span id="clippedPressure">Waiting...</span></p>
     <button id="clipButton", class="button">Clip Pressure</button>
     <div id="tablesDiv">
         <table id="rawAccelTable">
@@ -175,10 +175,14 @@
             var clipPressure = document.getElementById("clipButton");
             clipPressure.addEventListener("click", function() {
                 socket.emit('clip_pressure');
+                console.log('clip_pressure emmitted!');
             });
             socket.on('update_pressure', function(msg) {
                 var pressureClipSpan = document.getElementById("clippedPressure");
                 pressureClipSpan.textContent = msg.pressure;
+                console.log('pressure updated!');
+                console.log(msg)
+                console.log(msg.pressure)
             });
         });
     </script>
