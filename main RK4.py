@@ -147,6 +147,12 @@ def handle_connect():
     print('Client connected')
     socketio.start_background_task(target=loop)
 
+@socketio.on('clip_pressure')
+def send_pressure():
+    global pressure
+    print("Clipping pressure...")
+    socketio.emit('update_pressure', {pressure: pressure})
+
 # This function is called
 def main():
     # These specific arguments are required to make sure the webserver is hosted in a consistent spot, so don't change them unless you know what you're doing.

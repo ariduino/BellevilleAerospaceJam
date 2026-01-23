@@ -24,12 +24,29 @@
         font-weight: bold;
     }
     p {
-        margin-bottom: 20px;
+        margin-bottom: 10px;
         font-size: 25px;
     }
     h1 {
         font-size: 50px;
         font-weight: bold;
+    }
+    .button {
+        border-radius: 5px;
+        border-color: black;
+        border-width: 2px;
+        margin-bottom: 10px;
+        padding: 2px;
+    }
+    .button:hover {
+        background-color: rgb(215, 215, 215);
+    }
+    .button:active {
+        background-color: rgb(200, 200, 200);
+    }
+    #tablesDiv {
+        padding-top: 20px;
+        padding-bottom: 20px;
     }
 </style>
     <h1>Aerospace Jam Example</h1>
@@ -37,78 +54,83 @@
     <p><b>Barrometric Pressure: </b> <span id="barometricPressure">Loading...</span></p>
     <p><b>Temperature: </b> <span id="temperature">Loading...</span></p>
     <p><b>Altitude: </b> <span id="altitude">Loading...</span></p>
-    <table id="rawAccelTable">
-        <tr>
-            <td colspan="3" class="table-header">
-                <b>Raw Accelerometer Data</b>
-            </td>
-        </tr>
-        <tr>
-            <td>X: <span>Loading...</span></td>
-            <td>Y: <span>Loading...</span></td>
-            <td>Z: <span>Loading...</span></td>
-        </tr>
-    </table>
-    <table id="linAccelTable">
-        <tr>
-            <td colspan="3" class="table-header">
-                <b>Linear Acceleration Data</b>
-            </td>
-        </tr>
-        <tr>
-            <td>X: <span>Loading...</span></td>
-            <td>Y: <span>Loading...</span></td>
-            <td>Z: <span>Loading...</span></td>
-        </tr>
-    </table>
-    <table id="velTable">
-        <tr>
-            <td colspan="3" class="table-header">
-                <b>Velocity Data</b>
-            </td>
-        </tr>
-        <tr>
-            <td>X: <span>Loading...</span></td>
-            <td>Y: <span>Loading...</span></td>
-            <td>Z: <span>Loading...</span></td>
-        </tr>
-    </table>
-    <table id="posTable">
-        <tr>
-            <td colspan="3" class="table-header">
-                <b>Position Data</b>
-            </td>
-        </tr>
-        <tr>
-            <td>X: <span>Loading...</span></td>
-            <td>Y: <span>Loading...</span></td>
-            <td>Z: <span>Loading...</span></td>
-        </tr>
-    </table>
-    <table id="rawGyroTable">
-        <tr>
-            <td colspan="3" class="table-header">
-                <b>Raw Gyroscope Data</b>
-            </td>
-        </tr>
-        <tr>
-            <td>X: <span>Loading...</span></td>
-            <td>Y: <span>Loading...</span></td>
-            <td>Z: <span>Loading...</span></td>
-        </tr>
-    </table>
-    <table id="orientationTable">
-        <tr>
-            <td colspan="3" class="table-header">
-                <b>Orientation Data</b>
-            </td>
-        </tr>
-        <tr>
-            <td>X: <span>Loading...</span></td>
-            <td>Y: <span>Loading...</span></td>
-            <td>Z: <span>Loading...</span></td>
-        </tr>
-    </table>
+
+    <p><b>Clipped Pressure: </b> <span id="clippedPressure"></span></p>
+    <button id="clipButton", class="button">Clip Pressure</button>
+    <div id="tablesDiv">
+        <table id="rawAccelTable">
+            <tr>
+                <td colspan="3" class="table-header">
+                    <b>Raw Accelerometer Data</b>
+                </td>
+            </tr>
+            <tr>
+                <td>X: <span>Loading...</span></td>
+                <td>Y: <span>Loading...</span></td>
+                <td>Z: <span>Loading...</span></td>
+            </tr>
+        </table>
+        <table id="linAccelTable">
+            <tr>
+                <td colspan="3" class="table-header">
+                    <b>Linear Acceleration Data</b>
+                </td>
+            </tr>
+            <tr>
+                <td>X: <span>Loading...</span></td>
+                <td>Y: <span>Loading...</span></td>
+                <td>Z: <span>Loading...</span></td>
+            </tr>
+        </table>
+        <table id="velTable">
+            <tr>
+                <td colspan="3" class="table-header">
+                    <b>Velocity Data</b>
+                </td>
+            </tr>
+            <tr>
+                <td>X: <span>Loading...</span></td>
+                <td>Y: <span>Loading...</span></td>
+                <td>Z: <span>Loading...</span></td>
+            </tr>
+        </table>
+        <table id="posTable">
+            <tr>
+                <td colspan="3" class="table-header">
+                    <b>Position Data</b>
+                </td>
+            </tr>
+            <tr>
+                <td>X: <span>Loading...</span></td>
+                <td>Y: <span>Loading...</span></td>
+                <td>Z: <span>Loading...</span></td>
+            </tr>
+        </table>
+        <table id="rawGyroTable">
+            <tr>
+                <td colspan="3" class="table-header">
+                    <b>Raw Gyroscope Data</b>
+                </td>
+            </tr>
+            <tr>
+                <td>X: <span>Loading...</span></td>
+                <td>Y: <span>Loading...</span></td>
+                <td>Z: <span>Loading...</span></td>
+            </tr>
+        </table>
+        <table id="orientationTable">
+            <tr>
+                <td colspan="3" class="table-header">
+                    <b>Orientation Data</b>
+                </td>
+            </tr>
+            <tr>
+                <td>X: <span>Loading...</span></td>
+                <td>Y: <span>Loading...</span></td>
+                <td>Z: <span>Loading...</span></td>
+            </tr>
+        </table>
+    </div>
     <script>
         // This function wrapper (addEventListener) makes the inner contents run only when the DOM (Document Object Model) content is loaded.
         // In simpler terms, this runs once the page has finished loading.
@@ -149,6 +171,14 @@
                     orientationTable.rows[1].cells[i].querySelector("span").textContent = orientation[i];
                     rawGyroTable.rows[1].cells[i].querySelector("span").textContent = rawGyroscope[i];
                 }
+            });
+            var clipPressure = document.getElementById("clipButton");
+            clipPressure.addEventListener("click", function() {
+                socket.emit('clip_pressure', {});
+            });
+            socket.on('update_pressure', function(msg) {
+                var pressureClipSpan = document.getElementById("clippedPressure");
+                pressureClipSpan.textContent = msg.pressure;
             });
         });
     </script>
