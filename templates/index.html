@@ -39,6 +39,7 @@
         border-width: 2px;
         margin-bottom: 10px;
         padding: 2px;
+        background-color: rgb(230, 230, 230);
     }
     .button:hover {
         background-color: rgb(215, 215, 215);
@@ -52,13 +53,16 @@
     }
 </style>
     <h1>Belleville Drone</h1>
-    
+
     <p><b>Barrometric Pressure: </b> <span id="barometricPressure">Loading...</span></p>
     <p><b>Temperature: </b> <span id="temperature">Loading...</span></p>
     <p><b>Altitude: </b> <span id="altitude">Loading...</span></p>
 
     <p><b>Clipped Pressure: </b> <span id="clippedPressure">Waiting...</span></p>
     <button id="clipButton", class="button">Clip Pressure</button>
+    
+    <p><b>Accelerometer Bias: </b> <span id="biasSpan">[-,-,-]</span></p>
+
     <div id="tablesDiv">
         <table id="rawAccelTable">
             <tr>
@@ -160,10 +164,12 @@
                 var posTable = document.getElementById('posTable');
                 var rawGyroTable = document.getElementById('rawGyroTable');
                 var orientationTable = document.getElementById('orientationTable');
+                var accelBiasSpan = document.getElementById('biasSpan');
 
                 barometricPressureSpan.textContent = barometricPressure;
                 temperatureSpan.textContent = temperature;
                 altitudeSpan.textContent = altitude;
+                accelBiasSpan.textContent = msg.bias;
 
                 for (var i = 0; i < 3; i++){ // loop through x, y, z
                     rawAccelTable.rows[1].cells[i].querySelector("span").textContent = rawAcceleration[i];

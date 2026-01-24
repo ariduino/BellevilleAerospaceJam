@@ -64,7 +64,8 @@ def update_html():
             'velocity': velocityList,
             'position': positionList,
             'rawGyroscope': lastGyroList,
-            'orientation': orientationList
+            'orientation': orientationList,
+            'bias': accelBias
         }
     )
     
@@ -74,9 +75,9 @@ def update_sensor_data():
     global last_data_update_time
     global lastAccelList, lastGyroList
 
-    pressure = bmp.get_pressure() 
-    altitude = bmp.get_altitude() 
-    temperature = bmp.get_temperature() 
+    pressure = round(bmp.get_pressure(), 2)
+    altitude = round(bmp.get_altitude(), 2)
+    temperature = round(bmp.get_temperature(), 2)
 
     dt = time.monotonic() - last_data_update_time    
     lastAccelList = correctedAccel()
