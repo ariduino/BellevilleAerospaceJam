@@ -151,7 +151,7 @@ def handle_connect():
 def send_pressure():
     global pressure
     print("Clipping pressure...")
-    socketio.emit('update_pressure', {pressure: pressure})
+    socketio.emit('update_pressure', {'pressure': pressure})
 
 # This function is called
 def main():
