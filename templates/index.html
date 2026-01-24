@@ -2,7 +2,7 @@
 <html>
 <head>
     <!-- This sets your page title. You can change this to whatever you want! -->
-    <title>Aerospace Jam Example</title>
+    <title>Drone</title>
     <!-- The below script tag is used to load socket.io from the server. -->
     <!--{{ url_for('static', filename='styles.css') }}-->
     <!-- <link rel="stylesheet" href="style.css"> -->
@@ -18,6 +18,8 @@
         border: 3px solid black;
         padding: 5px;
         font-size: 20px;
+        min-width: 150px;
+        text-align: center;
     }
     .table-header {
         text-align: center;
@@ -49,8 +51,8 @@
         padding-bottom: 20px;
     }
 </style>
-    <h1>Aerospace Jam Example</h1>
-    <!-- Notice how the span that contains the placeholder value has an ID. We reference this ID later in the script, and it lets us pick this element in specific. -->
+    <h1>Belleville Drone</h1>
+    
     <p><b>Barrometric Pressure: </b> <span id="barometricPressure">Loading...</span></p>
     <p><b>Temperature: </b> <span id="temperature">Loading...</span></p>
     <p><b>Altitude: </b> <span id="altitude">Loading...</span></p>

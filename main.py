@@ -4,8 +4,6 @@ from flask_socketio import SocketIO
 
 # MAIN LIBRARY IMPORTS
 import time
-import math
-import numpy as np
 from bmp180 import BMP180
 from mpu6050 import mpu6050
 from RK4Tracker import Combined_RK4
@@ -14,12 +12,17 @@ from RK4Tracker import Combined_RK4
 # LIBRARY OBJECT DEFINITIONS
 bmp = BMP180()
 mpu = mpu6050(0x68) # 0x68 is the address for the MPU6050 on the I2C bus.
+calibrationSamples = 500
+calibrationTime = 0.005
+global accelBias
+accelBias = [0.0, 0.0, 0.0]
 tracker = Combined_RK4(initial_angles=[0, 0, 0], alpha=0.98, damping=1.0)
 
 
 # SENSOR VALUE VARIABLES (we define them at the top so that they are global)
 global pressure, altitude, temperature
 global position, velocity, orientation
+global lastAccelList, lastGyroList
 lastAccelList = []
 lastGyroList = []
 x, y, z = 0, 1, 2 # indexes for easier reading of accel, vel, pos, gyro, and orientation lists (now its accel[x] instead of accel[0])
@@ -38,6 +41,18 @@ def index():
 
 # This function runs in the background to transmit data to connected clients.
 def update_html():
+    orientationList = orientation.tolist()
+    for i in range (0,3):
+        orientationList[i] = round(orientationList[i], 3)
+        
+    velocityList = velocity.tolist()
+    for i in range (0,3):
+        velocityList[i] = round(velocityList[i], 3)
+        
+    positionList = position.tolist()
+    for i in range (0,3):
+        positionList[i] = round(positionList[i], 3)
+        
     socketio.emit(  # Then, we emit an event called "update_data" - but this can actually be whatever we want - with the data being a dictionary
         'update_data',
         {
@@ -46,32 +61,28 @@ def update_html():
             'altitude': altitude,
             'rawAcceleration': lastAccelList,
             'linearAcceleration': [0, 0, 0],
-            'velocity': velocity,
-            'position': position,
+            'velocity': velocityList,
+            'position': positionList,
             'rawGyroscope': lastGyroList,
-            'orientation': orientation
+            'orientation': orientationList
         }
     )
-
+    
 def update_sensor_data():
     global pressure, altitude, temperature
     global position, velocity, orientation
     global last_data_update_time
-    # Read barometer
+    global lastAccelList, lastGyroList
+
     pressure = bmp.get_pressure() 
     altitude = bmp.get_altitude() 
     temperature = bmp.get_temperature() 
 
-    dt = time.monotonic() - last_data_update_time
-    
-    accelRaw = mpu.get_accel_data()
-    accelList = [accelRaw['x'], accelRaw['y'], accelRaw['z']]
-    gyroRaw = mpu.get_gyro_data()
-    gyroList = [gyroRaw['x'], gyroRaw['y'], gyroRaw['z']]
-    lastAccelList = accelList
-    lastGyroList = gyroList
-    
-    accelState, orientation = tracker.update(np.array(mpu.get_accel_data()), np.array(mpu.get_gyro_data()), dt)
+    dt = time.monotonic() - last_data_update_time    
+    lastAccelList = correctedAccel()
+    lastGyroList = correctedGyro()
+
+    accelState, orientation = tracker.update(lastAccelList, lastGyroList, dt)
     
     position = accelState[0]
     velocity = accelState[1]
@@ -81,6 +92,7 @@ def update_sensor_data():
 
 
 def loop(): # MAIN LOOP FUNCTION
+    calibrateAccel()
     global last_html_update_time
     while True:
         currentTime = time.monotonic()
@@ -93,11 +105,53 @@ def loop(): # MAIN LOOP FUNCTION
             update_html()
 
 
+def calibrateAccel():
+    global accelBias
+    
+    sum_accel = [0.0, 0.0, 0.0]
+    
+    for i in range(calibrationSamples):
+        a = mpu.get_accel_data()
+        sum_accel[x] += a['x']
+        sum_accel[y] += a['y']
+        sum_accel[z] += a['z']
+        time.sleep(calibrationTime)
+
+    avg_accel = [s / calibrationSamples for s in sum_accel]
+
+    accelBias[x] = avg_accel[x] - 0.0
+    accelBias[y] = avg_accel[y] - 0.0
+    accelBias[z] = avg_accel[z] - 9.81
+
+    print("Accel bias:", accelBias)
+
+def correctedAccel():
+    raw = mpu.get_accel_data()
+    return [
+        round(raw['x'] - accelBias[x], 3),
+        round(raw['y'] - accelBias[y], 3),
+        round(raw['z'] - accelBias[z], 3)
+    ]
+
+def correctedGyro():
+    raw = mpu.get_gyro_data()
+    return [
+        round(raw['x'], 3),
+        round(raw['y'], 3),
+        round(raw['z'], 3)
+    ]
+
 # This function runs when someone connects to the server - and all we do is start the background thread to update the data.
 @socketio.on('connect')
 def handle_connect():
     print('Client connected')
     socketio.start_background_task(target=loop)
+
+@socketio.on('clip_pressure')
+def send_pressure():
+    global pressure
+    print("Clipping pressure...")
+    socketio.emit('update_pressure', {pressure: pressure})
 
 # This function is called
 def main():
@@ -106,4 +160,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
