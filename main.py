@@ -7,7 +7,10 @@ import time
 from bmp180 import BMP180
 from mpu6050 import mpu6050
 from RK4Tracker import Combined_RK4
-
+from picamera2 import Picamera2
+import io
+import base64
+import RPi.GPIO as GPIO
 
 # LIBRARY OBJECT DEFINITIONS
 bmp = BMP180()
@@ -17,14 +20,22 @@ calibrationTime = 0.005
 global accelBias
 accelBias = [0.0, 0.0, 0.0]
 tracker = Combined_RK4(initial_angles=[0, 0, 0], alpha=0.98, damping=1.0)
-from picamera2 import Picamera2
-import io
-import base64
 cam = Picamera2()
 cam = Picamera2()
 camera_config = cam.create_preview_configuration(main={"size": (640, 480)})
 cam.configure(camera_config)
 cam.start()
+
+# MOTOR GPIO SETUP
+IN1 = 12
+IN2 = 13
+ENA = 14
+GPIO.setmode(GPIO.BCM)
+GPIO.setup(IN1, GPIO.OUT)
+GPIO.setup(IN2, GPIO.OUT)
+GPIO.setup(ENA, GPIO.OUT)
+pwm = GPIO.PWM(ENA, 100)
+pwm.start(0)
 
 # SENSOR VALUE VARIABLES (we define them at the top so that they are global)
 global pressure, altitude, temperature
@@ -170,6 +181,19 @@ def send_image():
     b64_image = base64.b64encode(stream.read()).decode('utf-8')
     socketio.emit('new_image', {'image_data': b64_image})
     print("Sent image to client")
+
+def motorForward(speed):
+    GPIO.output(IN1, GPIO.HIGH)
+    GPIO.output(IN2, GPIO.LOW)
+    pwm.ChangeDutyCycle(speed)
+def motorBackward(speed):
+    GPIO.output(IN1, GPIO.LOW)
+    GPIO.output(IN2, GPIO.HIGH)
+    pwm.ChangeDutyCycle(speed)
+def motorStop():
+    GPIO.output(IN1, GPIO.LOW)
+    GPIO.output(IN2, GPIO.LOW)
+    pwm.ChangeDutyCycle(0)
 
 def main():
     # These specific arguments are required to make sure the webserver is hosted in a consistent spot, so don't change them unless you know what you're doing.
