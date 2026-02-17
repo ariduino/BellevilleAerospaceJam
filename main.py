@@ -17,7 +17,14 @@ calibrationTime = 0.005
 global accelBias
 accelBias = [0.0, 0.0, 0.0]
 tracker = Combined_RK4(initial_angles=[0, 0, 0], alpha=0.98, damping=1.0)
-
+from picamera2 import Picamera2
+import io
+import base64
+cam = Picamera2()
+cam = Picamera2()
+camera_config = cam.create_preview_configuration(main={"size": (640, 480)})
+cam.configure(camera_config)
+cam.start()
 
 # SENSOR VALUE VARIABLES (we define them at the top so that they are global)
 global pressure, altitude, temperature
@@ -150,11 +157,20 @@ def handle_connect():
 
 @socketio.on('clip_pressure')
 def send_pressure():
+    send_image() # temporarily uses the presure clipping button to send an image. (This will change later)
     global pressure
     print("Clipping pressure...")
     socketio.emit('update_pressure', {'pressure': pressure})
 
-# This function is called
+# @socketio.on('request_image')
+def send_image():
+    stream = io.BytesIO()
+    cam.capture_file(stream, format='jpeg')
+    stream.seek(0)
+    b64_image = base64.b64encode(stream.read()).decode('utf-8')
+    socketio.emit('new_image', {'image_data': b64_image})
+    print("Sent image to client")
+
 def main():
     # These specific arguments are required to make sure the webserver is hosted in a consistent spot, so don't change them unless you know what you're doing.
     socketio.run(app, host='0.0.0.0', port=80, allow_unsafe_werkzeug=True)

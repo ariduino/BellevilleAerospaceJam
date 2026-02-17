@@ -137,6 +137,10 @@
             </tr>
         </table>
     </div>
+    <div id="cameraContainer">
+        <h2>Camera Feed</h2>
+        <img id="cameraFeed" src="" alt="Camera feed will appear here" width="640" height="480">
+    </div>
     <script>
         // This function wrapper (addEventListener) makes the inner contents run only when the DOM (Document Object Model) content is loaded.
         // In simpler terms, this runs once the page has finished loading.
@@ -165,6 +169,7 @@
                 var rawGyroTable = document.getElementById('rawGyroTable');
                 var orientationTable = document.getElementById('orientationTable');
                 var accelBiasSpan = document.getElementById('biasSpan');
+                var cameraFeed = document.getElementById("cameraFeed");
 
                 barometricPressureSpan.textContent = barometricPressure;
                 temperatureSpan.textContent = temperature;
@@ -191,6 +196,10 @@
                 console.log('pressure updated!');
                 console.log(msg)
                 console.log(msg.pressure)
+            });
+            socket.on('new_image', function(msg) {
+                console.log("Received image from server");
+                cameraFeed.src = 'data:image/jpeg;base64,' + msg.image_data;
             });
         });
     </script>
