@@ -168,6 +168,7 @@ def handle_connect():
 
 @socketio.on('clip_pressure')
 def send_pressure():
+    motorForward(50)
     send_image() # temporarily uses the presure clipping button to send an image. (This will change later)
     global pressure
     print("Clipping pressure...")
@@ -181,6 +182,7 @@ def send_image():
     b64_image = base64.b64encode(stream.read()).decode('utf-8')
     socketio.emit('new_image', {'image_data': b64_image})
     print("Sent image to client")
+    motorStop()
 
 def motorForward(speed):
     GPIO.output(IN1, GPIO.HIGH)
