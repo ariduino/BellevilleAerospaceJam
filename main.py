@@ -21,7 +21,6 @@ global accelBias
 accelBias = [0.0, 0.0, 0.0]
 tracker = Combined_RK4(initial_angles=[0, 0, 0], alpha=0.98, damping=1.0)
 cam = Picamera2()
-cam = Picamera2()
 camera_config = cam.create_preview_configuration(main={"size": (640, 480)})
 cam.configure(camera_config)
 cam.start()
