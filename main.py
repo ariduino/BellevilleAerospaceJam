@@ -24,7 +24,7 @@ cam = Picamera2()
 camera_config = cam.create_preview_configuration(main={"size": (640, 480)})
 cam.configure(camera_config)
 cam.start()
-camera_fps = 1
+camera_fps = 2
 camera_interval = 1.0 / camera_fps
 last_camera_time = time.monotonic()
 
@@ -114,7 +114,7 @@ def update_sensor_data():
 
 def loop(): # MAIN LOOP FUNCTION
     # calibrateAccel() TEMPORARILY DISABLED FOR TESTING
-    global last_html_update_time
+    global last_html_update_time, last_camera_time, last_data_update_time
     while True:
         currentTime = time.monotonic()
         if (currentTime - last_data_update_time) >= 0.001: # update the sensor data if the minimum time has passed between readings
@@ -203,11 +203,11 @@ def motorStop():
     pwm.ChangeDutyCycle(0)
 
 def testMotor():
-    print("Testing motor forward...")
+    motorForward(25)
+    time.sleep(2)
     motorForward(50)
     time.sleep(2)
-    print("Testing motor backward...")
-    motorBackward(50)
+    motorForward(100)
     time.sleep(2)
     print("Stopping motor...")
     motorStop()
