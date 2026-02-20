@@ -24,6 +24,9 @@ cam = Picamera2()
 camera_config = cam.create_preview_configuration(main={"size": (640, 480)})
 cam.configure(camera_config)
 cam.start()
+camera_fps = 1
+camera_interval = 1.0 / camera_fps
+last_camera_time = time.monotonic()
 
 # MOTOR GPIO SETUP
 IN1 = 12
@@ -110,7 +113,7 @@ def update_sensor_data():
 
 
 def loop(): # MAIN LOOP FUNCTION
-    calibrateAccel()
+    # calibrateAccel() TEMPORARILY DISABLED FOR TESTING
     global last_html_update_time
     while True:
         currentTime = time.monotonic()
@@ -121,6 +124,11 @@ def loop(): # MAIN LOOP FUNCTION
         if currentTime - last_html_update_time >= html_update_interval: # update HTML if its been long enough
             last_html_update_time = currentTime
             update_html()
+        
+        currentTime = time.monotonic()
+        if currentTime - last_camera_time >= camera_interval:
+            last_camera_time = currentTime
+            send_image()
 
 
 def calibrateAccel():
@@ -167,11 +175,10 @@ def handle_connect():
 
 @socketio.on('clip_pressure')
 def send_pressure():
-    motorForward(50)
-    send_image() # temporarily uses the presure clipping button to send an image. (This will change later)
     global pressure
     print("Clipping pressure...")
     socketio.emit('update_pressure', {'pressure': pressure})
+    testMotor()
 
 # @socketio.on('request_image')
 def send_image():
@@ -181,7 +188,6 @@ def send_image():
     b64_image = base64.b64encode(stream.read()).decode('utf-8')
     socketio.emit('new_image', {'image_data': b64_image})
     print("Sent image to client")
-    motorStop()
 
 def motorForward(speed):
     GPIO.output(IN1, GPIO.HIGH)
@@ -195,6 +201,16 @@ def motorStop():
     GPIO.output(IN1, GPIO.LOW)
     GPIO.output(IN2, GPIO.LOW)
     pwm.ChangeDutyCycle(0)
+
+def testMotor():
+    print("Testing motor forward...")
+    motorForward(50)
+    time.sleep(2)
+    print("Testing motor backward...")
+    motorBackward(50)
+    time.sleep(2)
+    print("Stopping motor...")
+    motorStop()
 
 def main():
     # These specific arguments are required to make sure the webserver is hosted in a consistent spot, so don't change them unless you know what you're doing.
