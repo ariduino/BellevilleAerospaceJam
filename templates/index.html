@@ -10,36 +10,70 @@
 </head>
 <body>
 <style>
+    body {
+        margin: 16px;
+        background: #ffffff;
+        color: #111111;
+        font-family: Arial, sans-serif;
+    }
+    h1 {
+        margin: 0 0 16px;
+        font-size: 42px;
+        font-weight: bold;
+    }
+    .dashboard-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(280px, 1fr));
+        gap: 16px;
+        align-items: start;
+    }
+    .dashboard-column {
+        background: #efefef;
+        border: 1px solid #d6d6d6;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    .column-title {
+        margin: 0;
+        padding: 10px 12px;
+        background: #c8c8c8;
+        border-bottom: 1px solid #b1b1b1;
+        font-size: 22px;
+        font-weight: 700;
+    }
+    .column-content {
+        padding: 12px;
+    }
+    p {
+        margin: 0 0 10px;
+        font-size: 20px;
+    }
     table {
-    border-collapse: collapse;
-    margin-bottom: 25px;
+        border-collapse: collapse;
+        width: 100%;
+        margin-bottom: 14px;
+        background: #ffffff;
     }
     table, td {
-        border: 3px solid black;
+        border: 2px solid #222222;
         padding: 5px;
-        font-size: 20px;
-        min-width: 150px;
+        min-width: 80px;
         text-align: center;
+        font-size: 15px;
     }
     .table-header {
         text-align: center;
         font-weight: bold;
     }
-    p {
-        margin-bottom: 10px;
-        font-size: 25px;
-    }
-    h1 {
-        font-size: 50px;
-        font-weight: bold;
-    }
     .button {
         border-radius: 5px;
-        border-color: black;
-        border-width: 2px;
-        margin-bottom: 10px;
-        padding: 2px;
+        border: 2px solid black;
+        margin-right: 8px;
+        margin-bottom: 8px;
+        padding: 6px 10px;
         background-color: rgb(230, 230, 230);
+        font-size: 16px;
+        cursor: pointer;
     }
     .button:hover {
         background-color: rgb(205, 205, 205);
@@ -47,110 +81,144 @@
     .button:active {
         background-color: rgb(180, 180, 180);
     }
-    #tablesDiv {
-        padding-top: 20px;
-        padding-bottom: 20px;
+    #cameraFeed {
+        width: 100%;
+        height: auto;
+        max-width: 640px;
+        min-width: 640px;
+        max-height: 480px;
+        min-height: 480px;
+        border: 2px solid #222222;
+        background: #ffffff;
+    }
+    @media (max-width: 1360px) {
+        .dashboard-grid {
+            grid-template-columns: repeat(2, minmax(280px, 1fr));
+        }
+    }
+    @media (max-width: 760px) {
+        .dashboard-grid {
+            grid-template-columns: 1fr;
+        }
     }
 </style>
     <h1>Belleville Drone</h1>
 
-    <p><b>Barrometric Pressure: </b> <span id="barometricPressure">Loading...</span></p>
-    <p><b>Temperature: </b> <span id="temperature">Loading...</span></p>
-    <p><b>Altitude: </b> <span id="altitude">Loading...</span></p>
+    <div class="dashboard-grid">
+        <section class="dashboard-column">
+            <h2 class="column-title">BMP180:</h2>
+            <div class="column-content">
+                <p><b>Barrometric Pressure: </b> <span id="barometricPressure">Loading...</span></p>
+                <p><b>Temperature: </b> <span id="temperature">Loading...</span></p>
+                <p><b>Altitude: </b> <span id="altitude">Loading...</span></p>
+                <p><b>Clipped Pressure: </b> <span id="clippedPressure">Waiting...</span></p>
+                <button id="clipButton" class="button">Clip Pressure</button>
+            </div>
+        </section>
 
-    <p><b>Clipped Pressure: </b> <span id="clippedPressure">Waiting...</span></p>
-    <button id="clipButton", class="button">Clip Pressure</button>
+        <section class="dashboard-column">
+            <h2 class="column-title">Sample Motor:</h2>
+            <div class="column-content">
+                <p><b>Motor State: </b><span id="motorState">stopped</span></p>
+                <p><b>Motor Position: </b><span id="motorPosition">0.000</span> / <span id="motorMax">0.000</span></p>
+                <button id="motorStepUpButton" class="button">Up +1s</button>
+                <button id="motorStepDownButton" class="button">Down +1s</button>
+                <button id="motorHoldUpButton" class="button">Hold Up</button>
+                <button id="motorHoldDownButton" class="button">Hold Down</button>
+                <button id="motorGoTopButton" class="button">Go Top</button>
+                <button id="motorGoBottomButton" class="button">Go Bottom</button>
+                <button id="motorStopButton" class="button">Stop</button>
+            </div>
+        </section>
 
-    <h2>Motor Control</h2>
-    <p><b>Motor State: </b><span id="motorState">stopped</span></p>
-    <p><b>Motor Position (s): </b><span id="motorPosition">0.000</span> / <span id="motorMax">0.000</span></p>
-    <button id="motorStepUpButton" class="button">Up +1s</button>
-    <button id="motorStepDownButton" class="button">Down +1s</button>
-    <button id="motorHoldUpButton" class="button">Hold Up</button>
-    <button id="motorHoldDownButton" class="button">Hold Down</button>
-    <button id="motorGoTopButton" class="button">Go Top</button>
-    <button id="motorGoBottomButton" class="button">Go Bottom</button>
-    <button id="motorStopButton" class="button">Stop</button>
-    
-    <p><b>Accelerometer Bias: </b> <span id="biasSpan">[-,-,-]</span></p>
+        <section class="dashboard-column">
+            <h2 class="column-title">MPU6060:</h2>
+            <div class="column-content">
+                <p><b>Accelerometer Bias: </b> <span id="biasSpan">[-,-,-]</span></p>
 
-    <div id="tablesDiv">
-        <table id="rawAccelTable">
-            <tr>
-                <td colspan="3" class="table-header">
-                    <b>Raw Accelerometer Data</b>
-                </td>
-            </tr>
-            <tr>
-                <td>X: <span>Loading...</span></td>
-                <td>Y: <span>Loading...</span></td>
-                <td>Z: <span>Loading...</span></td>
-            </tr>
-        </table>
-        <table id="linAccelTable">
-            <tr>
-                <td colspan="3" class="table-header">
-                    <b>Linear Acceleration Data</b>
-                </td>
-            </tr>
-            <tr>
-                <td>X: <span>Loading...</span></td>
-                <td>Y: <span>Loading...</span></td>
-                <td>Z: <span>Loading...</span></td>
-            </tr>
-        </table>
-        <table id="velTable">
-            <tr>
-                <td colspan="3" class="table-header">
-                    <b>Velocity Data</b>
-                </td>
-            </tr>
-            <tr>
-                <td>X: <span>Loading...</span></td>
-                <td>Y: <span>Loading...</span></td>
-                <td>Z: <span>Loading...</span></td>
-            </tr>
-        </table>
-        <table id="posTable">
-            <tr>
-                <td colspan="3" class="table-header">
-                    <b>Position Data</b>
-                </td>
-            </tr>
-            <tr>
-                <td>X: <span>Loading...</span></td>
-                <td>Y: <span>Loading...</span></td>
-                <td>Z: <span>Loading...</span></td>
-            </tr>
-        </table>
-        <table id="rawGyroTable">
-            <tr>
-                <td colspan="3" class="table-header">
-                    <b>Raw Gyroscope Data</b>
-                </td>
-            </tr>
-            <tr>
-                <td>X: <span>Loading...</span></td>
-                <td>Y: <span>Loading...</span></td>
-                <td>Z: <span>Loading...</span></td>
-            </tr>
-        </table>
-        <table id="orientationTable">
-            <tr>
-                <td colspan="3" class="table-header">
-                    <b>Orientation Data</b>
-                </td>
-            </tr>
-            <tr>
-                <td>X: <span>Loading...</span></td>
-                <td>Y: <span>Loading...</span></td>
-                <td>Z: <span>Loading...</span></td>
-            </tr>
-        </table>
-    </div>
-    <div id="cameraContainer">
-        <h2>Camera Feed</h2>
-        <img id="cameraFeed" src="" alt="Camera feed will appear here" width="640" height="480">
+                <div id="tablesDiv">
+                    <table id="rawAccelTable">
+                        <tr>
+                            <td colspan="3" class="table-header">
+                                <b>Raw Accelerometer Data</b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>X: <span>Loading...</span></td>
+                            <td>Y: <span>Loading...</span></td>
+                            <td>Z: <span>Loading...</span></td>
+                        </tr>
+                    </table>
+                    <table id="linAccelTable">
+                        <tr>
+                            <td colspan="3" class="table-header">
+                                <b>Linear Acceleration Data</b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>X: <span>Loading...</span></td>
+                            <td>Y: <span>Loading...</span></td>
+                            <td>Z: <span>Loading...</span></td>
+                        </tr>
+                    </table>
+                    <table id="velTable">
+                        <tr>
+                            <td colspan="3" class="table-header">
+                                <b>Velocity Data</b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>X: <span>Loading...</span></td>
+                            <td>Y: <span>Loading...</span></td>
+                            <td>Z: <span>Loading...</span></td>
+                        </tr>
+                    </table>
+                    <table id="posTable">
+                        <tr>
+                            <td colspan="3" class="table-header">
+                                <b>Position Data</b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>X: <span>Loading...</span></td>
+                            <td>Y: <span>Loading...</span></td>
+                            <td>Z: <span>Loading...</span></td>
+                        </tr>
+                    </table>
+                    <table id="rawGyroTable">
+                        <tr>
+                            <td colspan="3" class="table-header">
+                                <b>Raw Gyroscope Data</b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>X: <span>Loading...</span></td>
+                            <td>Y: <span>Loading...</span></td>
+                            <td>Z: <span>Loading...</span></td>
+                        </tr>
+                    </table>
+                    <table id="orientationTable">
+                        <tr>
+                            <td colspan="3" class="table-header">
+                                <b>Orientation Data</b>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>X: <span>Loading...</span></td>
+                            <td>Y: <span>Loading...</span></td>
+                            <td>Z: <span>Loading...</span></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <section class="dashboard-column">
+            <h2 class="column-title">Camera Feed:</h2>
+            <div class="column-content" id="cameraContainer">
+                <img id="cameraFeed" src="" alt="Camera feed will appear here" width="640" height="480">
+            </div>
+        </section>
     </div>
     <script>
         // This function wrapper (addEventListener) makes the inner contents run only when the DOM (Document Object Model) content is loaded.
