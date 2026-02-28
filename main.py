@@ -32,6 +32,12 @@ last_camera_time = time.monotonic()
 IN1 = 12
 IN2 = 13
 ENA = 14
+motor_speed = 25
+motor_position_s = 0.0
+motor_max_s = 12.0  # Max allowed extension time from top to bottom.
+motor_direction = 0  # 1=down, -1=up, 0=stopped
+motor_until = None # define the variable but leave it empty for now
+motor_last_update = time.monotonic()
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(IN1, GPIO.OUT)
 GPIO.setup(IN2, GPIO.OUT)
@@ -55,6 +61,7 @@ last_data_update_time = time.monotonic()
 # FLASK APP SETUP
 app = Flask(__name__) # Here, we create the neccesary base app. You don't need to worry about this.
 socketio = SocketIO(app)
+background_loop_started = False # prevents starting two loops at once
 @app.route('/') # When someone requests the root page from our web server, we return 'index.html'.
 def index():
     return render_template('index.html')
@@ -117,6 +124,9 @@ def loop(): # MAIN LOOP FUNCTION
     global last_html_update_time, last_camera_time, last_data_update_time
     while True:
         currentTime = time.monotonic()
+        update_motor_state(currentTime)
+
+        currentTime = time.monotonic()
         if (currentTime - last_data_update_time) >= 0.001: # update the sensor data if the minimum time has passed between readings
             update_sensor_data()
     
@@ -170,15 +180,18 @@ def correctedGyro():
 # This function runs when someone connects to the server - and all we do is start the background thread to update the data.
 @socketio.on('connect')
 def handle_connect():
+    global background_loop_started
     print('Client connected')
-    socketio.start_background_task(target=loop)
+    if not background_loop_started:
+        background_loop_started = True
+        socketio.start_background_task(target=loop)
+    emit_motor_status()
 
 @socketio.on('clip_pressure')
 def send_pressure():
     global pressure
     print("Clipping pressure...")
     socketio.emit('update_pressure', {'pressure': pressure})
-    testMotor()
 
 # @socketio.on('request_image')
 def send_image():
@@ -187,30 +200,134 @@ def send_image():
     stream.seek(0)
     b64_image = base64.b64encode(stream.read()).decode('utf-8')
     socketio.emit('new_image', {'image_data': b64_image})
-    print("Sent image to client")
 
-def motorForward(speed):
+def motorDown():
+    global motor_speed
     GPIO.output(IN1, GPIO.HIGH)
     GPIO.output(IN2, GPIO.LOW)
-    pwm.ChangeDutyCycle(speed)
-def motorBackward(speed):
+    pwm.ChangeDutyCycle(motor_speed)
+def motorUp():
+    global motor_speed
     GPIO.output(IN1, GPIO.LOW)
     GPIO.output(IN2, GPIO.HIGH)
-    pwm.ChangeDutyCycle(speed)
+    pwm.ChangeDutyCycle(motor_speed)
 def motorStop():
     GPIO.output(IN1, GPIO.LOW)
     GPIO.output(IN2, GPIO.LOW)
     pwm.ChangeDutyCycle(0)
 
-def testMotor():
-    motorForward(25)
-    time.sleep(2)
-    motorForward(50)
-    time.sleep(2)
-    motorForward(100)
-    time.sleep(2)
-    print("Stopping motor...")
+def emit_motor_status(): # Update the html page with the current motor status
+    state = "stopped"
+    if motor_direction == 1:
+        state = "down"
+    elif motor_direction == -1:
+        state = "up"
+
+    socketio.emit(
+        "motor_status",
+        {
+            "position_s": round(motor_position_s, 3), # current time postition of the motor
+            "max_s": motor_max_s, # max time possition
+            "state": state, # current motor direction/state
+        },
+    )
+
+def stop_motor_command():
+    global motor_direction, motor_until
+    motor_direction = 0
+    motor_until = None
     motorStop()
+    emit_motor_status()
+
+def start_motor_command(direction, duration_s=None):
+    global motor_direction, motor_until
+
+    if direction not in ("up", "down"): # dont continue if the motor is supposed to be stopped
+        return False
+
+    if direction == "up": # calculate how long the motor can go up or down without passing the limits
+        remaining = motor_position_s
+    else:
+        remaining = motor_max_s - motor_position_s
+    
+    if remaining <= 0: # stop if its at or over the limit.
+        stop_motor_command()
+        return False
+
+    if duration_s is not None: 
+        duration_s = max(0.0, min(float(duration_s), remaining)) # Sets how long the motor will spin for. Also has logic to ensrure the motor doesnt excede its limits or go negative.
+        if duration_s <= 0: # stop the motor if its reached its destination
+            stop_motor_command()
+            return False
+        motor_until = time.monotonic() + duration_s # caluclate the system time at which the motor should stop
+    else:
+        motor_until = None # sets the motor run duration to None if there is no duration set by the function call.
+
+    if direction == "up":
+        motorUp()
+        motor_direction = -1
+    else:
+        motorDown()
+        motor_direction = 1
+
+    emit_motor_status()
+    return True
+
+def update_motor_state(now): # keeps track of the motors position in time
+    global motor_position_s, motor_last_update
+    dt = now - motor_last_update
+    if dt < 0:
+        dt = 0
+
+    if motor_direction == 1: # increment the time position based on its direction.
+        motor_position_s += dt
+    elif motor_direction == -1:
+        motor_position_s -= dt
+
+    hit_limit = False
+    if motor_position_s <= 0: # checks to see if the motor has passed its limits.
+        motor_position_s = 0.0
+        hit_limit = (motor_direction == -1)
+    elif motor_position_s >= motor_max_s:
+        motor_position_s = motor_max_s
+        hit_limit = (motor_direction == 1)
+
+    timed_out = False # checks to see if the motor has reached its run time
+    if motor_until is not None:
+        if now >= motor_until:
+            timed_out = True
+    motor_last_update = now
+
+    if hit_limit or timed_out: # if the motor has reached its limits or run time the motor is stopped.
+        stop_motor_command()
+
+@socketio.on("motor_step")
+def handle_motor_step(msg): # Handles the html page's call to move the motor in a direction for a specified amount of time
+    direction = (msg or {}).get("dir")
+    duration_ms = (msg or {}).get("duration_ms", 1000)
+    duration_s = max(0.0, float(duration_ms) / 1000.0)
+    start_motor_command(direction, duration_s=duration_s)
+
+@socketio.on("motor_hold_start")
+def handle_motor_hold_start(msg): # runs the motor in a direction until the "motor_hold_stop" command is sent from the html page
+    direction = (msg or {}).get("dir")
+    start_motor_command(direction, duration_s=None)
+
+@socketio.on("motor_hold_stop")
+def handle_motor_hold_stop(): # stops the motor from running. Used to stop after the "motor_hold_start" command is sent from the html page
+    stop_motor_command()
+
+@socketio.on("motor_stop")
+def handle_motor_stop(): # stops the motor immediately.
+    stop_motor_command()
+
+@socketio.on("motor_go_top")
+def handle_motor_go_top(): # moves the motor to the top position
+    start_motor_command("up", duration_s=motor_position_s)
+
+@socketio.on("motor_go_bottom")
+def handle_motor_go_bottom(): # move the motor to the bottom position
+    start_motor_command("down", duration_s=(motor_max_s - motor_position_s))
 
 def main():
     # These specific arguments are required to make sure the webserver is hosted in a consistent spot, so don't change them unless you know what you're doing.

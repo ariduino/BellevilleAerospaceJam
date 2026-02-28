@@ -42,10 +42,10 @@
         background-color: rgb(230, 230, 230);
     }
     .button:hover {
-        background-color: rgb(215, 215, 215);
+        background-color: rgb(205, 205, 205);
     }
     .button:active {
-        background-color: rgb(200, 200, 200);
+        background-color: rgb(180, 180, 180);
     }
     #tablesDiv {
         padding-top: 20px;
@@ -60,6 +60,17 @@
 
     <p><b>Clipped Pressure: </b> <span id="clippedPressure">Waiting...</span></p>
     <button id="clipButton", class="button">Clip Pressure</button>
+
+    <h2>Motor Control</h2>
+    <p><b>Motor State: </b><span id="motorState">stopped</span></p>
+    <p><b>Motor Position (s): </b><span id="motorPosition">0.000</span> / <span id="motorMax">0.000</span></p>
+    <button id="motorStepUpButton" class="button">Up +1s</button>
+    <button id="motorStepDownButton" class="button">Down +1s</button>
+    <button id="motorHoldUpButton" class="button">Hold Up</button>
+    <button id="motorHoldDownButton" class="button">Hold Down</button>
+    <button id="motorGoTopButton" class="button">Go Top</button>
+    <button id="motorGoBottomButton" class="button">Go Bottom</button>
+    <button id="motorStopButton" class="button">Stop</button>
     
     <p><b>Accelerometer Bias: </b> <span id="biasSpan">[-,-,-]</span></p>
 
@@ -200,6 +211,50 @@
             socket.on('new_image', function(msg) {
                 console.log("Received image from server");
                 cameraFeed.src = 'data:image/jpeg;base64,' + msg.image_data;
+            });
+
+            function bindHoldControl(buttonId, direction) { // binds a button to the motor hold commands.
+                var button = document.getElementById(buttonId);
+                function startHold(event) {
+                    event.preventDefault();
+                    socket.emit("motor_hold_start", {dir: direction});
+                }
+                function stopHold(event) {
+                    event.preventDefault();
+                    socket.emit("motor_hold_stop");
+                }
+
+                button.addEventListener("mousedown", startHold); // various events of holding and releasing the button trigger the start and stop of the motor hold command.
+                button.addEventListener("mouseup", stopHold);
+                button.addEventListener("mouseleave", stopHold);
+                button.addEventListener("touchstart", startHold, {passive: false});
+                button.addEventListener("touchend", stopHold, {passive: false});
+                button.addEventListener("touchcancel", stopHold, {passive: false});
+            }
+
+            document.getElementById("motorStepUpButton").addEventListener("click", function() {
+                socket.emit("motor_step", {dir: "up", duration_ms: 1000});
+            });
+            document.getElementById("motorStepDownButton").addEventListener("click", function() {
+                socket.emit("motor_step", {dir: "down", duration_ms: 1000});
+            });
+            document.getElementById("motorGoTopButton").addEventListener("click", function() {
+                socket.emit("motor_go_top");
+            });
+            document.getElementById("motorGoBottomButton").addEventListener("click", function() {
+                socket.emit("motor_go_bottom");
+            });
+            document.getElementById("motorStopButton").addEventListener("click", function() {
+                socket.emit("motor_stop");
+            });
+
+            bindHoldControl("motorHoldUpButton", "up");
+            bindHoldControl("motorHoldDownButton", "down");
+
+            socket.on("motor_status", function(msg) { // display the motor status.
+                document.getElementById("motorState").textContent = msg.state;
+                document.getElementById("motorPosition").textContent = Number(msg.position_s).toFixed(3);
+                document.getElementById("motorMax").textContent = Number(msg.max_s).toFixed(3);
             });
         });
     </script>
