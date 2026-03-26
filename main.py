@@ -34,7 +34,7 @@ IN2 = 13
 ENA = 14
 motor_speed = 25
 motor_position_s = 0.0
-motor_max_s = 12.0  # Max allowed extension time from top to bottom.
+motor_max_s = 10.0  # Max allowed extension time from top to bottom.
 motor_direction = 0  # 1=down, -1=up, 0=stopped
 motor_until = None # define the variable but leave it empty for now
 motor_last_update = time.monotonic()

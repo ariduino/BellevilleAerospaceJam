@@ -23,7 +23,7 @@
     }
     .dashboard-grid {
         display: grid;
-        grid-template-columns: repeat(4, minmax(280px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
         gap: 16px;
         align-items: start;
     }
@@ -36,7 +36,8 @@
     .column-title {
         margin: 0;
         padding: 10px 12px;
-        background: #c8c8c8;
+        background: #090071;
+        color: #f6d500;
         border-bottom: 1px solid #b1b1b1;
         font-size: 22px;
         font-weight: 700;
@@ -55,7 +56,7 @@
         background: #ffffff;
     }
     table, td {
-        border: 2px solid #222222;
+        border: 2px solid #090071;
         padding: 5px;
         min-width: 80px;
         text-align: center;
@@ -67,16 +68,16 @@
     }
     .button {
         border-radius: 5px;
-        border: 2px solid black;
+        border: 2px solid #090071;
         margin-right: 8px;
         margin-bottom: 8px;
         padding: 6px 10px;
-        background-color: rgb(230, 230, 230);
+        background-color: #f6d500;
         font-size: 16px;
         cursor: pointer;
     }
     .button:hover {
-        background-color: rgb(205, 205, 205);
+        background-color: #d2b600;
     }
     .button:active {
         background-color: rgb(180, 180, 180);
@@ -85,11 +86,10 @@
         width: 100%;
         height: auto;
         max-width: 640px;
-        min-width: 640px;
-        max-height: 480px;
-        min-height: 480px;
-        border: 2px solid #222222;
+        aspect-ratio: 4 / 3;
+        border: 2px solid #090071;
         background: #ffffff;
+        display: block;
     }
     @media (max-width: 1360px) {
         .dashboard-grid {
@@ -102,16 +102,16 @@
         }
     }
 </style>
-    <h1>Belleville Drone</h1>
+    <h1>CreativeTeamName_07 from Belleville High School</h1>
 
     <div class="dashboard-grid">
         <section class="dashboard-column">
             <h2 class="column-title">BMP180:</h2>
             <div class="column-content">
-                <p><b>Barrometric Pressure: </b> <span id="barometricPressure">Loading...</span></p>
-                <p><b>Temperature: </b> <span id="temperature">Loading...</span></p>
-                <p><b>Altitude From Pressure: </b> <span id="altitude">Loading...</span></p>
-                <p><b>Clipped Pressure: </b> <span id="clippedPressure">Waiting...</span></p>
+                <p><b>Barrometric Pressure (Pa): </b> <span id="barometricPressure">Loading...</span></p>
+                <p><b>Temperature (°C): </b> <span id="temperature">Loading...</span></p>
+                <p><b>Altitude (m): </b> <span id="altitude">Loading...</span></p>
+                <p><b>Clipped Pressure (Pa): </b> <span id="clippedPressure">Waiting...</span></p>
                 <button id="clipButton" class="button">Clip Pressure</button>
             </div>
         </section>
