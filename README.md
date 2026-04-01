@@ -1,4 +1,3 @@
-# Carson's-Killer-Drone-From-Belleville
 Belleville HS Drone Team Codebase
 https://docs.aerospacejam.org/
 
